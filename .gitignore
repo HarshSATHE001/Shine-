@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+ai/venv/
+
+# Environment / Secret
+.env
+.env.local
+
+# Database
+backend/database.sqlite
+
+# Build Output
+frontend/dist/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
