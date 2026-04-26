@@ -38,4 +38,11 @@ router.get('/analytics', authenticateToken, apiController.getAnalytics);
 router.post('/counseling', authenticateToken, apiController.scheduleCounseling);
 router.get('/counseling', authenticateToken, apiController.getCounseling);
 
+// Detailed Attendance Routes
+router.get('/subjects', authenticateToken, apiController.getSubjects);
+router.post('/attendance/sessions', authenticateToken, apiController.createAttendanceSession);
+router.post('/attendance/logs', authenticateToken, apiController.logAttendance);
+router.get('/attendance/student/:id', authenticateToken, apiController.getStudentAttendanceHistory);
+router.get('/attendance/defaulters', authenticateToken, apiController.getDefaulters);
+
 module.exports = router;

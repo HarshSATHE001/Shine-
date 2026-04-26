@@ -1,12 +1,13 @@
 import API_BASE_URL from '../config';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Activity, ShieldAlert, CheckCircle2, TrendingUp, Calendar, Zap, MessageSquare, GraduationCap, AlertTriangle } from 'lucide-react';
+import { TrendLineChart } from '../components/ui/Charts';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
-import { RiskBadge } from '../components/ui/Table';
-import { TrendingUp, Award, BookOpen, Clock, Activity, Zap } from 'lucide-react';
 
 const StudentDashboard = () => {
   const [data, setData] = useState(null);
+  const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,30 +17,30 @@ const StudentDashboard = () => {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('${API_BASE_URL}/students/me', {
+      const res = await axios.get(`${API_BASE_URL}/students/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      let hist = [];
+      if (res.data.profile) {
+        const hRes = await axios.get(`${API_BASE_URL}/students/${res.data.profile.id}/history`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        hist = hRes.data.records;
+      }
       setData(res.data);
+      setHistory(hist);
     } catch (error) {
-      console.error('Error fetching student data:', error);
+      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
+  if (loading || !data) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-cyan-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-  
-  if (!data || !data.profile) {
-    return (
-      <div className="glass-card p-12 text-center max-w-2xl mx-auto mt-10 border border-cyan-500/20">
-        <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tighter">System Access Denied</h3>
-        <p className="text-slate-500 font-mono text-sm">Your biometric profile is not linked to any student records. Contact JARVIS administrator.</p>
+      <div className="flex justify-center py-20">
+        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -47,115 +48,127 @@ const StudentDashboard = () => {
   const { profile, latestRecord, risk, counseling } = data;
 
   return (
-    <div className="space-y-8 animate-in fade-in zoom-in-95 duration-1000 max-w-6xl mx-auto">
+    <div className="space-y-6 animate-fade-in">
       
-      {/* HUD Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 p-8 border border-cyan-500/20 bg-cyan-500/5 rounded-[40px] relative overflow-hidden">
-        <div className="relative z-10">
-          <div className="flex items-center space-x-2 mb-2">
-            <Activity className="w-4 h-4 text-cyan-500 animate-pulse" />
-            <span className="text-[10px] font-mono text-cyan-500 tracking-[0.3em] uppercase">User Identification: Confirmed</span>
-          </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">
-            Welcome back, <span className="text-cyan-400">{profile.name}</span>
-          </h1>
-          <p className="text-slate-400 font-mono text-sm mt-1">Status: Active // Term: {latestRecord?.semester || 'current'}</p>
+      {/* Welcome Header */}
+      <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Hello, {profile.name}!</h1>
+           <p className="text-slate-500 text-sm mt-1">Here is your academic and attendance summary.</p>
         </div>
-        <div className="flex items-center space-x-2 bg-cyan-600 text-white px-5 py-2.5 rounded-2xl shadow-[0_0_15px_rgba(6,182,212,0.4)]">
-           <Award className="w-5 h-5" />
-           <span className="font-black text-xs uppercase tracking-widest">Academic Elite Pool</span>
+        <div className="flex items-center space-x-3 bg-indigo-50 px-5 py-3 rounded-2xl border border-indigo-100">
+            <GraduationCap className="w-6 h-6 text-indigo-600" />
+            <div>
+               <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Enrolled Course</p>
+               <p className="text-sm font-bold text-indigo-900">{profile.course}</p>
+            </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Risk Scan */}
-        <Card className="glass-card p-10 flex flex-col items-center justify-center text-center relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <h3 className="text-[10px] font-black text-cyan-500/60 uppercase tracking-widest mb-8">Dropout Probability Scan</h3>
-          {risk ? (
-            <>
-              <div className="mb-8 scale-125">
-                 <RiskBadge level={risk.risk_category} />
-              </div>
-              <p className={`text-6xl font-black mb-2 tracking-tighter ${risk.risk_score >= 70 ? 'text-rose-500 glow-rose' : risk.risk_score >= 40 ? 'text-amber-500' : 'text-emerald-500 glow-emerald'}`}>
-                {risk.risk_score}<span className="text-xl opacity-30">/100</span>
-              </p>
-              <p className="text-xs text-slate-500 mt-6 px-4 font-mono leading-relaxed">LOG: "{risk.reason}"</p>
-            </>
-          ) : (
-            <p className="text-slate-600 font-mono italic">Calibrating risk model...</p>
-          )}
-        </Card>
-
-        {/* Vital Metrics */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-           <Card className="glass-card p-8 group border-l-4 border-l-cyan-500">
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-6 group-hover:rotate-12 transition-transform">
-                 <Zap className="w-6 h-6" />
-              </div>
-              <p className="text-[10px] font-black text-cyan-500 uppercase tracking-widest mb-1">Academic Sync Index</p>
-              <h4 className={`text-5xl font-black ${latestRecord?.marks_percentage >= 75 ? 'text-emerald-400' : latestRecord?.marks_percentage < 40 ? 'text-rose-500' : 'text-white'}`}>
-                {latestRecord?.marks_percentage || 0}%
-              </h4>
-              <div className="mt-8 flex items-center text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
-                 <TrendingUp className="w-4 h-4 mr-1" strokeWidth={3} />
-                 <span>Trajectory +2.4%</span>
-              </div>
-           </Card>
-
-           <Card className="glass-card p-8 group border-l-4 border-l-indigo-500">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-6 group-hover:rotate-12 transition-transform">
-                 <Clock className="w-6 h-6" />
-              </div>
-              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Attendance Core Stability</p>
-              <h4 className={`text-5xl font-black ${latestRecord?.attendance_percentage >= 75 ? 'text-emerald-400' : 'text-rose-500'}`}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* Attendance Summary */}
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Attendance Status</p>
+              <Activity className="w-4 h-4 text-indigo-600" />
+            </div>
+            <div className="flex items-end space-x-2">
+              <h4 className={`text-4xl font-black ${latestRecord?.attendance_percentage >= 75 ? 'text-emerald-600' : 'text-rose-600'}`}>
                 {latestRecord?.attendance_percentage || 0}%
               </h4>
-              <div className="mt-8 w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
-                 <div className={`h-full transition-all duration-1000 ${latestRecord?.attendance_percentage < 75 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${latestRecord?.attendance_percentage || 0}%` }}></div>
-              </div>
-           </Card>
+              <span className="text-xs font-bold text-slate-400 mb-1">Last Updated</span>
+            </div>
+            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+               <div className={`h-full transition-all duration-1000 ${latestRecord?.attendance_percentage < 75 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${latestRecord?.attendance_percentage || 0}%` }}></div>
+            </div>
+        </div>
+
+        {/* Risk Assessment */}
+        <div className={`bg-white p-8 rounded-3xl border-2 shadow-sm space-y-4 ${risk?.risk_category === 'High' ? 'border-rose-100' : 'border-slate-100'}`}>
+            <div className="flex justify-between items-center">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Risk Assessment</p>
+              <ShieldAlert className={`w-4 h-4 ${risk?.risk_category === 'High' ? 'text-rose-500' : 'text-emerald-500'}`} />
+            </div>
+            <h4 className={`text-2xl font-black uppercase tracking-tight ${risk?.risk_category === 'High' ? 'text-rose-600' : risk?.risk_category === 'Medium' ? 'text-amber-600' : 'text-emerald-600'}`}>
+              {risk?.risk_category || 'Low Risk'}
+            </h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              {risk?.reason || 'Your performance and attendance are within optimal parameters.'}
+            </p>
+        </div>
+
+        {/* Academic Marks */}
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Academic Score</p>
+              <Zap className="w-4 h-4 text-amber-500" />
+            </div>
+            <h4 className="text-4xl font-black text-slate-900">
+              {latestRecord?.marks_percentage || 0}<span className="text-lg text-slate-400 ml-1">pts</span>
+            </h4>
+            <div className="flex gap-1.5">
+              {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className={`h-2 flex-1 rounded-full ${i <= Math.ceil((latestRecord?.marks_percentage || 0) / 20) ? 'bg-amber-400' : 'bg-slate-100'}`}></div>
+              ))}
+            </div>
+        </div>
+
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 pro-card">
+          <CardHeader title="Performance History" />
+          <CardBody>
+            <div className="h-[300px]">
+              <TrendLineChart 
+                data={history} 
+                xAxisKey="semester" 
+                lines={[
+                  { key: 'attendance_percentage', color: '#10b981', label: 'Attendance' },
+                  { key: 'marks_percentage', color: '#4f46e5', label: 'Academic Score' }
+                ]} 
+              />
+            </div>
+          </CardBody>
+        </Card>
+
+        <div className="space-y-6">
+            <Card className="pro-card">
+                <CardHeader title="Counseling Sessions" />
+                <CardBody>
+                  {counseling.length > 0 ? (
+                      <div className="space-y-3">
+                          {counseling.slice(0, 2).map((session, i) => (
+                              <div key={i} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-indigo-200 transition-colors">
+                                  <div className="flex justify-between items-center mb-2">
+                                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${session.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{session.status}</span>
+                                      <span className="text-[10px] font-bold text-slate-400">{new Date(session.scheduled_date).toLocaleDateString()}</span>
+                                  </div>
+                                  <p className="text-xs font-bold text-slate-800">Meeting with Mentor</p>
+                                  <p className="text-[10px] text-slate-500 italic mt-1 line-clamp-2">"{session.notes}"</p>
+                              </div>
+                          ))}
+                      </div>
+                  ) : (
+                      <div className="text-center py-10">
+                          <MessageSquare className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+                          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">No Sessions</p>
+                      </div>
+                  )}
+                </CardBody>
+            </Card>
+
+            <div className="p-6 rounded-3xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 relative overflow-hidden">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest mb-2 opacity-80">Quick Tip</h4>
+                <p className="text-sm font-medium leading-relaxed relative z-10">
+                  Try to keep your attendance above 85% to maintain a low-risk profile.
+                </p>
+                <TrendingUp className="absolute bottom-[-10px] right-[-10px] w-20 h-20 text-white/10" />
+            </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="glass-card">
-            <CardHeader title="Incoming Protocols" />
-            <CardBody>
-              {counseling.filter(c => c.status === 'pending').length > 0 ? (
-                <div className="space-y-4">
-                  {counseling.filter(c => c.status === 'pending').map((c, i) => (
-                    <div key={i} className="flex justify-between items-center p-6 bg-slate-900/50 rounded-[24px] border border-cyan-500/10 hover:border-cyan-500/30 transition-colors">
-                      <div>
-                        <p className="font-black text-white uppercase">{new Date(c.scheduled_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
-                        <p className="text-[10px] text-cyan-500/60 font-mono mt-1 uppercase tracking-widest">Counseling Uplink</p>
-                      </div>
-                      <div className="text-right">
-                         <p className="text-xs font-black text-cyan-400">{new Date(c.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                         <span className="text-[9px] text-slate-500 font-mono uppercase tracking-[0.2em]">Verified</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                  <p className="text-slate-600 font-mono text-sm italic">No active protocols detected.</p>
-                </div>
-              )}
-            </CardBody>
-          </Card>
-          
-          <div className="bg-slate-900 border border-cyan-500/10 rounded-[32px] p-8 text-white relative overflow-hidden flex flex-col justify-between group">
-             <div className="relative z-10">
-                <h3 className="text-2xl font-black uppercase tracking-tighter italic">Quick Guidance</h3>
-                <p className="text-slate-400 mt-4 text-sm leading-relaxed font-mono">JARVIS: "Focus on your Semester 3 project. Current trajectory suggests a potential grade boost if submitted early."</p>
-             </div>
-             <button className="mt-8 bg-cyan-600 hover:bg-cyan-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(6,182,212,0.2)]">
-                Access Archives
-             </button>
-             <div className="absolute top-[-20px] right-[-20px] w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-colors"></div>
-          </div>
-      </div>
     </div>
   );
 };

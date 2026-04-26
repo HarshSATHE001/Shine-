@@ -58,13 +58,35 @@ async function initDb() {
         notes TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS subjects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS attendance_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subject_id INTEGER REFERENCES subjects(id) ON DELETE CASCADE,
+        mentor_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        session_name TEXT NOT NULL,
+        session_date DATE NOT NULL,
+        timing TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS attendance_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER REFERENCES attendance_sessions(id) ON DELETE CASCADE,
+        student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+        status TEXT CHECK (status IN ('present', 'absent')) NOT NULL,
+        reason TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   // Insert dummy data if empty
   const mentor = await db.get("SELECT * FROM users WHERE email='mentor@example.com'");
   if (!mentor) {
-      // In a real app we'd bcrypt the password here, but for dummy data, let's just insert a bcrypted one for 'password123'
-      // $2b$10$EP/V/bY.W/K3xGXYN12XVu2m8Y8E0I0M/f4h/N/G.0u2K6/k0Z28a
       const bcrypt = require('bcrypt');
       const hash = await bcrypt.hash('password123', 10);
       
@@ -74,16 +96,23 @@ async function initDb() {
       await db.run("INSERT INTO students (user_id, enrollment_number, course, year) VALUES (?, ?, ?, ?)", [studentUser.id, 'ENR001', 'B.Tech', 2]);
   }
 
+  // Seed subjects if empty
+  const subjectCount = await db.get("SELECT COUNT(*) as count FROM subjects");
+  if (subjectCount.count === 0) {
+      const initialSubjects = ['Mathematics', 'Computer Science', 'Physics', 'Artificial Intelligence', 'Software Engineering'];
+      for (const sub of initialSubjects) {
+          await db.run("INSERT INTO subjects (name) VALUES (?)", [sub]);
+      }
+  }
+
   return db;
 }
 
 dbPromise = initDb();
 
 module.exports = {
-  // A helper that behaves a bit like pg
   query: async (text, params) => {
     const db = await dbPromise;
-    // convert $1, $2 to ?
     const sqliteText = text.replace(/\$\d+/g, '?');
     
     const isSelect = sqliteText.trim().toUpperCase().startsWith('SELECT');
@@ -93,7 +122,6 @@ module.exports = {
         const rows = await db.all(sqliteText, params);
         return { rows };
     } else {
-        // remove RETURNING since sqlite doesn't support it standardly in node-sqlite the same way
         let cleanText = sqliteText;
         if (isInsertReturning) {
             cleanText = cleanText.split('RETURNING')[0];
@@ -102,7 +130,6 @@ module.exports = {
         const result = await db.run(cleanText, params);
         
         if (isInsertReturning) {
-            // Very naive way to get the returned row
             const rows = await db.all(`SELECT * FROM ${cleanText.split('INTO ')[1].split(' ')[0]} WHERE id = ?`, [result.lastID]);
             return { rows };
         }

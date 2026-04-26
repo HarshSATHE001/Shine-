@@ -1,7 +1,7 @@
 import API_BASE_URL from '../config';
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
-import { Users, AlertTriangle, Activity, CheckCircle2, TrendingUp, Calendar, ShieldAlert, Cpu, Zap } from 'lucide-react';
+import { Users, AlertTriangle, Activity, CheckCircle, TrendingUp, ShieldAlert, FileText, Info } from 'lucide-react';
 import StatCard from '../components/ui/StatCard';
 import { TrendLineChart, RiskPieChart } from '../components/ui/Charts';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
@@ -19,8 +19,8 @@ const MentorDashboard = () => {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const [studentsRes, analyticsRes] = await Promise.all([
-        axios.get('${API_BASE_URL}/students', config),
-        axios.get('${API_BASE_URL}/analytics', config)
+        axios.get(`${API_BASE_URL}/students`, config),
+        axios.get(`${API_BASE_URL}/analytics`, config)
       ]);
       setStudents(studentsRes.data);
       setAnalytics(analyticsRes.data);
@@ -54,128 +54,94 @@ const MentorDashboard = () => {
   }, [stats, analytics]);
 
   return (
-    <div className="space-y-8 animate-in fade-in zoom-in-95 duration-1000">
+    <div className="space-y-6 animate-fade-in">
       
-      {/* HUD Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 p-8 border border-cyan-500/20 bg-cyan-500/5 rounded-[40px] relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-4 opacity-20">
-            <Cpu className="w-24 h-24 text-cyan-500 animate-pulse" />
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Mentor Dashboard</h1>
+          <p className="text-slate-500 text-sm">Overview of student performance and risk metrics.</p>
         </div>
-        <div className="relative z-10">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-3 h-3 rounded-full bg-cyan-500 animate-ping"></div>
-            <span className="text-[10px] font-black tracking-[0.3em] text-cyan-500 uppercase">System Status: Active</span>
-          </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">
-            Command <span className="text-cyan-400">Console</span>
-          </h1>
-          <p className="text-slate-400 font-mono text-sm mt-2 max-w-xl">
-            JARVIS Protocol 4.2 Initialized. Monitoring <span className="text-white font-bold">{stats.total}</span> biometric student records. Global dropout probability: <span className="text-rose-400 font-bold">{(stats.highRisk / (stats.total || 1) * 100).toFixed(1)}%</span>
-          </p>
+        <div className="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="text-xs font-semibold text-slate-600">System Live</span>
         </div>
-        
-        <div className="flex items-center space-x-4 relative z-10">
-            <div className="bg-slate-900/80 border border-cyan-500/30 p-4 rounded-3xl flex items-center space-x-4 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
-                <div className="text-right">
-                    <p className="text-[9px] font-black text-cyan-500 uppercase tracking-widest leading-none">Power Level</p>
-                    <p className="text-xl font-black text-white mt-1">98.2%</p>
+      </div>
+
+      {/* Stats Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Total Students" value={stats.total} icon={Users} colorClass="bg-indigo-50 text-indigo-600 border-indigo-100" />
+        <StatCard title="High Risk" value={stats.highRisk} icon={ShieldAlert} colorClass="bg-rose-50 text-rose-600 border-rose-100" />
+        <StatCard title="Medium Risk" value={stats.mediumRisk} icon={AlertTriangle} colorClass="bg-amber-50 text-amber-600 border-amber-100" />
+        <StatCard title="Low Risk" value={stats.lowRisk} icon={CheckCircle} colorClass="bg-emerald-50 text-emerald-600 border-emerald-100" />
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Chart Column */}
+        <div className="lg:col-span-2 space-y-6">
+            <Card className="pro-card">
+              <CardHeader title="Performance Trends" />
+              <CardBody>
+                <div className="h-[300px] w-full">
+                  <TrendLineChart 
+                      data={chartData.trendData} 
+                      xAxisKey="month" 
+                      lines={[
+                          { key: 'avgAtt', color: '#4f46e5', label: 'Attendance' },
+                          { key: 'avgMarks', color: '#e11d48', label: 'Academic' }
+                      ]} 
+                  />
                 </div>
-                <Zap className="w-8 h-8 text-yellow-400 fill-yellow-400" />
-            </div>
+              </CardBody>
+            </Card>
         </div>
-      </div>
 
-      {/* Grid HUD Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Target Population" value={stats.total} icon={Users} colorClass="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" trend="up" trendValue="+12%" />
-        <StatCard title="Critical Threat" value={stats.highRisk} icon={ShieldAlert} colorClass="bg-rose-500/10 text-rose-400 border border-rose-500/20" trend="up" trendValue="+2%" />
-        <StatCard title="Variable Stability" value={stats.mediumRisk} icon={Activity} colorClass="bg-amber-500/10 text-amber-400 border border-amber-500/20" trend="down" trendValue="-5%" />
-        <StatCard title="Optimal Sync" value={stats.lowRisk} icon={CheckCircle2} colorClass="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" trend="up" trendValue="+8%" />
-      </div>
-
-      {/* Analytics Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 glass-card overflow-hidden">
-          <CardHeader title="Temporal Performance Matrix" action={
-            <div className="flex items-center space-x-2 text-cyan-400 font-mono text-[10px] bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></div>
-                <span>REAL-TIME TRACKING</span>
-            </div>
-          } />
-          <CardBody className="p-0">
-            <div className="p-8">
-                <TrendLineChart 
-                    data={chartData.trendData} 
-                    xAxisKey="month" 
-                    lines={[
-                        { key: 'avgAtt', color: '#06b6d4', label: 'Attendance' },
-                        { key: 'avgMarks', color: '#f43f5e', label: 'Academic' }
-                    ]} 
-                />
-            </div>
-            <div className="bg-cyan-500/5 p-4 border-t border-cyan-500/10 flex justify-between font-mono text-[10px] text-cyan-500/60 uppercase tracking-widest">
-                <span>Core Analytics: Online</span>
-                <span>Data Source: Node_DB_Alpha</span>
-            </div>
-          </CardBody>
-        </Card>
-        
-        <Card className="glass-card flex flex-col h-full">
-          <CardHeader title="Threat Distribution" />
-          <CardBody className="flex-1 flex items-center justify-center">
-            {chartData.riskPie.length > 0 ? (
-               <RiskPieChart data={chartData.riskPie} />
-            ) : (
-               <div className="text-slate-600 font-mono text-sm italic">Scanning for risk patterns...</div>
-            )}
-          </CardBody>
-        </Card>
-      </div>
-
-      {/* Student Quick-Links Matrix */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 glass-card p-1">
-             <div className="p-8 space-y-6">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center">
-                        <TrendingUp className="w-5 h-5 mr-2 text-cyan-500" />
-                        AI Analysis Report
-                    </h3>
-                    <span className="font-mono text-[10px] text-cyan-500">REF_ID: 8829-X</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                   <div className="p-5 border border-cyan-500/10 bg-cyan-500/5 rounded-3xl group hover:border-cyan-500/30 transition-colors">
-                      <p className="text-[10px] font-black text-cyan-500 uppercase tracking-[0.2em] mb-2">Top Insight</p>
-                      <p className="text-slate-300 text-sm leading-relaxed">Students with <strong>unpaid fees</strong> in Semester 2 show a <strong>68% higher</strong> correlation with attendance drops.</p>
+        {/* Distribution Column */}
+        <div className="space-y-6">
+            <Card className="pro-card h-full">
+              <CardHeader title="Risk Distribution" />
+              <CardBody className="flex flex-col items-center justify-center py-10">
+                {chartData.riskPie.length > 0 ? (
+                   <RiskPieChart data={chartData.riskPie} />
+                ) : (
+                   <div className="text-slate-400 text-sm italic py-20 text-center">
+                     <Info className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                     No data available
                    </div>
-                   <div className="p-5 border border-rose-500/10 bg-rose-500/5 rounded-3xl group hover:border-rose-500/30 transition-colors">
-                      <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] mb-2">Critical Flag</p>
-                      <p className="text-slate-300 text-sm leading-relaxed">Global academic average has dipped by <strong>4.2%</strong>. Recommended: Initiate Batch-Wide Review.</p>
+                )}
+              </CardBody>
+            </Card>
+        </div>
+      </div>
+
+      {/* Action Area */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="pro-card p-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden">
+             <div className="relative z-10">
+                <h3 className="text-xl font-bold mb-2">Generate Report</h3>
+                <p className="text-indigo-100 text-sm mb-6 max-w-sm">Create a comprehensive PDF report of current student standings and dropout risks.</p>
+                <button className="bg-white text-indigo-600 px-6 py-2 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-all">Download PDF</button>
+             </div>
+             <FileText className="absolute top-[-20px] right-[-20px] w-40 h-40 text-white/10 rotate-12" />
+          </div>
+
+          <div className="pro-card p-8 bg-white border border-slate-200">
+             <h3 className="text-xl font-bold mb-4 text-slate-800">Quick Alerts</h3>
+             <div className="space-y-4">
+                <div className="flex items-start space-x-3 p-3 bg-rose-50 rounded-2xl border border-rose-100">
+                   <AlertTriangle className="w-5 h-5 text-rose-500 mt-0.5" />
+                   <div>
+                      <p className="text-xs font-bold text-rose-700">High Risk Detected</p>
+                      <p className="text-[10px] text-rose-600">3 new students have fallen below the 70% attendance threshold.</p>
                    </div>
                 </div>
-             </div>
-             <div className="bg-slate-900/50 p-6 rounded-b-2xl border-t border-cyan-500/10 flex justify-end">
-                <button className="btn-primary">Execute Batch Scan</button>
-             </div>
-          </div>
-          
-          <div className="space-y-6">
-             <div className="glass-card p-8 border-l-4 border-l-cyan-500 relative overflow-hidden">
-                <h4 className="font-black text-white uppercase tracking-widest text-sm mb-4">Core Systems</h4>
-                <div className="space-y-4">
-                    {[
-                        { label: 'Academic Sync', status: 'Optimal' },
-                        { label: 'Biometric Attendance', status: 'Stable' },
-                        { label: 'Fee Verification', status: 'Pending' }
-                    ].map((sys, i) => (
-                        <div key={sys.label} className="flex justify-between items-center text-xs">
-                            <span className="text-slate-400 font-mono">{sys.label}</span>
-                            <span className={sys.status === 'Optimal' ? 'text-cyan-400 font-bold' : sys.status === 'Pending' ? 'text-amber-400 font-bold' : 'text-slate-300'}>{sys.status}</span>
-                        </div>
-                    ))}
-                </div>
-                <div className="mt-8 pt-6 border-t border-cyan-500/10">
-                   <p className="text-[10px] text-slate-500 font-mono italic">JARVIS: Ready for command input.</p>
+                <div className="flex items-start space-x-3 p-3 bg-amber-50 rounded-2xl border border-amber-100">
+                   <Info className="w-5 h-5 text-amber-500 mt-0.5" />
+                   <div>
+                      <p className="text-xs font-bold text-amber-700">Fee Update Pending</p>
+                      <p className="text-[10px] text-amber-600">Semester 2 fee records are currently being synchronized.</p>
+                   </div>
                 </div>
              </div>
           </div>
