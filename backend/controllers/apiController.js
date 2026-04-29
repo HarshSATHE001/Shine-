@@ -203,8 +203,6 @@ exports.getAnalytics = async (req, res) => {
   if (req.user.role !== 'mentor') return res.status(403).json({ error: 'Only mentors can access analytics' });
   
   try {
-    // A more complex query could be run here, but for simplicity we rely on getAllStudents's data format mostly.
-    // However, for historical trend line, we can fetch average attendance per month.
     const trendRes = await db.query(`
       SELECT semester as month, AVG(attendance_percentage) as avgAtt, AVG(marks_percentage) as avgMarks
       FROM records
@@ -212,15 +210,94 @@ exports.getAnalytics = async (req, res) => {
       ORDER BY created_at ASC
     `);
     
-    // SQLite uses strftime. Let's make sure it handles both PG and SQLite smoothly or just use the DB abstraction we have.
-    // If we use PG, it's TO_CHAR. The existing db.js uses SQLite mostly, wait let me check db.js!
-    
     res.json({
         trendData: trendRes.rows || [],
-        // We can add more aggregated data here
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch analytics' });
   }
+};
+
+// --- Detailed Attendance Endpoints ---
+
+exports.getSubjects = async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM subjects ORDER BY name ASC');
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch subjects' });
+    }
+};
+
+exports.createAttendanceSession = async (req, res) => {
+    if (req.user.role !== 'mentor') return res.status(403).json({ error: 'Unauthorized' });
+    const { subject_id, session_name, session_date, timing } = req.body;
+    try {
+        const result = await db.query(
+            'INSERT INTO attendance_sessions (subject_id, mentor_id, session_name, session_date, timing) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+            [subject_id, req.user.id, session_name, session_date, timing]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to create session' });
+    }
+};
+
+exports.logAttendance = async (req, res) => {
+    if (req.user.role !== 'mentor') return res.status(403).json({ error: 'Unauthorized' });
+    const { session_id, logs } = req.body; // logs: [{ student_id, status, reason }]
+    try {
+        for (const log of logs) {
+            await db.query(
+                'INSERT INTO attendance_logs (session_id, student_id, status, reason) VALUES ($1, $2, $3, $4)',
+                [session_id, log.student_id, log.status, log.reason || null]
+            );
+        }
+        res.json({ message: 'Attendance logged successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to log attendance' });
+    }
+};
+
+exports.getStudentAttendanceHistory = async (req, res) => {
+    const studentId = req.params.id;
+    try {
+        const result = await db.query(`
+            SELECT al.*, asess.session_name, asess.session_date, asess.timing, sub.name as subject_name
+            FROM attendance_logs al
+            JOIN attendance_sessions asess ON al.session_id = asess.id
+            JOIN subjects sub ON asess.subject_id = sub.id
+            WHERE al.student_id = $1
+            ORDER BY asess.session_date DESC, asess.created_at DESC
+        `, [studentId]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch attendance history' });
+    }
+};
+
+exports.getDefaulters = async (req, res) => {
+    if (req.user.role !== 'mentor') return res.status(403).json({ error: 'Unauthorized' });
+    try {
+        const result = await db.query(`
+            SELECT s.id, u.name, s.enrollment_number, sub.name as subject_name,
+                   COUNT(CASE WHEN al.status = 'present' THEN 1 END) * 100.0 / NULLIF(COUNT(al.id), 0) as attendance_percentage
+            FROM students s
+            JOIN users u ON s.user_id = u.id
+            CROSS JOIN subjects sub
+            LEFT JOIN attendance_sessions asess ON asess.subject_id = sub.id
+            LEFT JOIN attendance_logs al ON al.student_id = s.id AND al.session_id = asess.id
+            GROUP BY s.id, sub.id
+            HAVING attendance_percentage < 30 OR (attendance_percentage IS NULL AND (SELECT COUNT(*) FROM attendance_sessions WHERE subject_id = sub.id) > 0)
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch defaulters' });
+    }
 };

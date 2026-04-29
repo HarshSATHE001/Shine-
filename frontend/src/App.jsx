@@ -14,6 +14,9 @@ import StudentDashboard from './pages/StudentDashboard';
 import StudentProfile from './pages/StudentProfile';
 import StudentCounseling from './pages/StudentCounseling';
 
+// Detailed Attendance
+import AttendanceRecord from './pages/AttendanceRecord';
+
 function App() {
   return (
     <Router>
@@ -28,6 +31,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<MentorDashboard />} />
                 <Route path="/students" element={<MentorStudents />} />
+                <Route path="/attendance" element={<AttendanceRecord />} />
                 <Route path="/analytics" element={<MentorAnalytics />} />
                 <Route path="/counseling" element={<CounselingManager />} />
                 <Route path="*" element={<Navigate to="/mentor" replace />} />
@@ -44,6 +48,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<StudentDashboard />} />
                 <Route path="/profile" element={<StudentProfile />} />
+                <Route path="/attendance" element={<AttendanceRecord />} />
                 <Route path="/counseling" element={<StudentCounseling />} />
                 <Route path="*" element={<Navigate to="/student" replace />} />
               </Routes>
