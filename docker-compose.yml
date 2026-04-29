@@ -15,8 +15,6 @@ services:
     environment:
       - NODE_ENV=production
       - AI_SERVICE_URL=http://ai:8000
-    volumes:
-      - ./backend/database.sqlite:/app/database.sqlite
     depends_on:
       - ai
     networks:
