@@ -8,6 +8,7 @@ import MentorDashboard from './pages/MentorDashboard';
 import MentorStudents from './pages/MentorStudents';
 import MentorAnalytics from './pages/MentorAnalytics';
 import CounselingManager from './pages/CounselingManager';
+import BatchAnalysis from './pages/BatchAnalysis';
 
 // Student Pages
 import StudentDashboard from './pages/StudentDashboard';
@@ -34,6 +35,7 @@ function App() {
                 <Route path="/attendance" element={<AttendanceRecord />} />
                 <Route path="/analytics" element={<MentorAnalytics />} />
                 <Route path="/counseling" element={<CounselingManager />} />
+                <Route path="/batch-analysis" element={<BatchAnalysis />} />
                 <Route path="*" element={<Navigate to="/mentor" replace />} />
               </Routes>
             </Layout>

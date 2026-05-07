@@ -45,4 +45,8 @@ router.post('/attendance/logs', authenticateToken, apiController.logAttendance);
 router.get('/attendance/student/:id', authenticateToken, apiController.getStudentAttendanceHistory);
 router.get('/attendance/defaulters', authenticateToken, apiController.getDefaulters);
 
+// AI Batch Prediction Routes
+router.get('/test-students', apiController.getTestStudents);
+router.post('/ai/batch-predict', apiController.batchPredict);
+
 module.exports = router;
