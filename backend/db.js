@@ -82,6 +82,25 @@ async function initDb() {
         reason TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+    
+    CREATE TABLE IF NOT EXISTS chatbot_queries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+    mentor_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    status TEXT DEFAULT 'pending'
+        CHECK (status IN ('pending', 'answered', 'closed')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS chatbot_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    query_id INTEGER REFERENCES chatbot_queries(id) ON DELETE CASCADE,
+    sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    sender_role TEXT CHECK (sender_role IN ('student', 'mentor')),
+    message TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
   `);
 
   // Insert dummy data if empty
