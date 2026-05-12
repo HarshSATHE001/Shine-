@@ -53,6 +53,26 @@ const MentorDashboard = () => {
     return { riskPie, trendData };
   }, [stats, analytics]);
 
+  const handleDownload = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_BASE_URL}/report/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'Student_Risk_Report.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to generate report');
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       
@@ -120,8 +140,13 @@ const MentorDashboard = () => {
           <div className="pro-card p-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white relative overflow-hidden">
              <div className="relative z-10">
                 <h3 className="text-xl font-bold mb-2">Generate Report</h3>
-                <p className="text-indigo-100 text-sm mb-6 max-w-sm">Create a comprehensive PDF report of current student standings and dropout risks.</p>
-                <button className="bg-white text-indigo-600 px-6 py-2 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-all">Download PDF</button>
+                <p className="text-indigo-100 text-sm mb-6 max-w-sm">Create a comprehensive Excel report of current student standings and dropout risks.</p>
+                <button 
+                  onClick={handleDownload}
+                  className="bg-white text-indigo-600 px-6 py-2 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-all"
+                >
+                  Download XLSX
+                </button>
              </div>
              <FileText className="absolute top-[-20px] right-[-20px] w-40 h-40 text-white/10 rotate-12" />
           </div>

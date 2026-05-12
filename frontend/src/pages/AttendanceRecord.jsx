@@ -62,6 +62,9 @@ const AttendanceRecord = () => {
         
         const defRes = await axios.get(`${API_BASE_URL}/attendance/defaulters`, { headers });
         setDefaulters(defRes.data);
+
+        const allHistRes = await axios.get(`${API_BASE_URL}/attendance/all`, { headers });
+        setHistory(allHistRes.data);
       } else {
         const sId = JSON.parse(localStorage.getItem('user'))?.studentId;
         const histRes = await axios.get(`${API_BASE_URL}/attendance/student/${sId}`, { headers });
@@ -166,6 +169,7 @@ const AttendanceRecord = () => {
   ];
 
   const historyColumns = [
+    ...(role === 'mentor' ? [{ header: 'Student', accessor: 'student_name' }] : []),
     { header: 'Date', accessor: 'session_date' },
     { header: 'Session Details', accessor: 'session_name', render: (row) => (
         <div className="flex flex-col">

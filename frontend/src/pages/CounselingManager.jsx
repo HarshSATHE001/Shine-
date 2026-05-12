@@ -30,10 +30,13 @@ const CounselingManager = () => {
   const updateStatus = async (id, status) => {
     try {
       const token = localStorage.getItem('token');
-      alert(`Session updated: Status set to ${status}.`);
+      await axios.patch(`${API_BASE_URL}/counseling/${id}`, { status }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       fetchSessions();
     } catch (error) {
       console.error('Update failed:', error);
+      alert('Failed to update session status');
     }
   };
 

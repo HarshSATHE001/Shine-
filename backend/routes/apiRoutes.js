@@ -37,13 +37,24 @@ router.get('/analytics', authenticateToken, apiController.getAnalytics);
 // Counseling Routes
 router.post('/counseling', authenticateToken, apiController.scheduleCounseling);
 router.get('/counseling', authenticateToken, apiController.getCounseling);
+router.patch('/counseling/:id', authenticateToken, apiController.updateCounselingStatus);
+
+// Report Generation
+router.get('/report/download', authenticateToken, apiController.downloadReport);
+
+// Notifications
+router.post('/notifications/send', authenticateToken, apiController.sendAlert);
 
 // Detailed Attendance Routes
 router.get('/subjects', authenticateToken, apiController.getSubjects);
+router.get('/attendance/all', authenticateToken, apiController.getAllAttendanceHistory);
 router.post('/attendance/sessions', authenticateToken, apiController.createAttendanceSession);
 router.post('/attendance/logs', authenticateToken, apiController.logAttendance);
 router.get('/attendance/student/:id', authenticateToken, apiController.getStudentAttendanceHistory);
 router.get('/attendance/defaulters', authenticateToken, apiController.getDefaulters);
+
+// Profile
+router.patch('/auth/profile', authenticateToken, apiController.updateProfile);
 
 // AI Batch Prediction Routes
 router.get('/test-students', apiController.getTestStudents);

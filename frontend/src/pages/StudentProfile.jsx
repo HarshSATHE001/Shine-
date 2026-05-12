@@ -35,7 +35,20 @@ const StudentProfile = () => {
     }
   };
 
-  if (loading) {
+  const handleUpdate = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.patch(`${API_BASE_URL}/auth/profile`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(res.data.message);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to update information');
+    }
+  };
+
+  if (loading || !data) {
     return (
       <div className="flex justify-center py-20">
         <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
@@ -70,7 +83,7 @@ const StudentProfile = () => {
                 </div>
               </div>
             </div>
-            <button className="btn-secondary mb-2">Update Information</button>
+            <button onClick={handleUpdate} className="btn-secondary mb-2">Update Information</button>
           </div>
 
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">

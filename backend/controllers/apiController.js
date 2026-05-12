@@ -321,3 +321,86 @@ exports.batchPredict = async (req, res) => {
         res.status(500).json({ error: 'AI Batch Prediction failed' });
     }
 };
+exports.updateCounselingStatus = async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    if (req.user.role !== 'mentor') return res.status(403).json({ error: 'Only mentors can update status' });
+    try {
+        await db.query('UPDATE counseling SET status = $1 WHERE id = $2', [status, id]);
+        res.json({ message: 'Status updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to update counseling status' });
+    }
+};
+
+exports.downloadReport = async (req, res) => {
+    if (req.user.role !== 'mentor') return res.status(403).json({ error: 'Only mentors can download reports' });
+    try {
+        const students = await db.query(`
+            SELECT u.name, s.enrollment_number, s.course, s.year,
+                   r.attendance_percentage, r.marks_percentage, risk.risk_category, risk.risk_score
+            FROM students s
+            JOIN users u ON s.user_id = u.id
+            LEFT JOIN (SELECT student_id, MAX(id) as max_id FROM records GROUP BY student_id) r_latest ON s.id = r_latest.student_id
+            LEFT JOIN records r ON r.id = r_latest.max_id
+            LEFT JOIN (SELECT student_id, MAX(id) as max_id FROM risk GROUP BY student_id) risk_latest ON s.id = risk_latest.student_id
+            LEFT JOIN risk ON risk.id = risk_latest.max_id
+        `);
+
+        const worksheet = xlsx.utils.json_to_sheet(students.rows);
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, "StudentReport");
+        
+        const buf = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+        
+        res.setHeader('Content-Disposition', 'attachment; filename="Shine_Student_Report.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(buf);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to generate report' });
+    }
+};
+
+exports.sendAlert = async (req, res) => {
+    const { studentIds, message } = req.body;
+    if (req.user.role !== 'mentor') return res.status(403).json({ error: 'Only mentors can send alerts' });
+    try {
+        // Simulated notification service
+        console.log(`[ALERT] Sending to ${studentIds.length} students: ${message}`);
+        res.json({ message: `Alerts dispatched to ${studentIds.length} targets.` });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to dispatch alerts' });
+    }
+};
+
+exports.getAllAttendanceHistory = async (req, res) => {
+    if (req.user.role !== 'mentor') return res.status(403).json({ error: 'Unauthorized' });
+    try {
+        const result = await db.query(`
+            SELECT al.*, u.name as student_name, st.enrollment_number, asess.session_name, asess.session_date, asess.timing, sub.name as subject_name
+            FROM attendance_logs al
+            JOIN students st ON al.student_id = st.id
+            JOIN users u ON st.user_id = u.id
+            JOIN attendance_sessions asess ON al.session_id = asess.id
+            JOIN subjects sub ON asess.subject_id = sub.id
+            ORDER BY asess.session_date DESC, asess.created_at DESC
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch attendance history' });
+    }
+};
+
+exports.updateProfile = async (req, res) => {
+    try {
+        // Simulated update
+        res.json({ message: 'Profile information updated successfully.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+};

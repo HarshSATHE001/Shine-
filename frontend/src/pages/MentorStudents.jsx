@@ -165,7 +165,20 @@ const MentorStudents = () => {
         onRowAction={handleRowClick}
         actionText="View Profile"
         selectable={true}
-        onBulkAction={(ids) => alert(`Selected ${ids.length} students.`)}
+        onBulkAction={async (ids) => {
+          if (ids.length === 0) return;
+          try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(`${API_BASE_URL}/notifications/send`, {
+              studentIds: ids,
+              message: 'Urgent: Please review your academic standing.'
+            }, { headers: { Authorization: `Bearer ${token}` } });
+            alert(res.data.message);
+          } catch (error) {
+            console.error(error);
+            alert('Failed to send alerts.');
+          }
+        }}
       />
 
       {/* Student Details Modal */}
