@@ -4,12 +4,15 @@ import Login from './pages/Login';
 import Layout from './components/layout/Layout';
 
 // Mentor Pages
+import MentorChatbot from './pages/MentorChatbot';
 import MentorDashboard from './pages/MentorDashboard';
 import MentorStudents from './pages/MentorStudents';
 import MentorAnalytics from './pages/MentorAnalytics';
 import CounselingManager from './pages/CounselingManager';
+import BatchAnalysis from './pages/BatchAnalysis';
 
 // Student Pages
+import StudentChatbot from "./pages/StudentChatbot";
 import StudentDashboard from './pages/StudentDashboard';
 import StudentProfile from './pages/StudentProfile';
 import StudentCounseling from './pages/StudentCounseling';
@@ -34,6 +37,8 @@ function App() {
                 <Route path="/attendance" element={<AttendanceRecord />} />
                 <Route path="/analytics" element={<MentorAnalytics />} />
                 <Route path="/counseling" element={<CounselingManager />} />
+                <Route path="/batch-analysis" element={<BatchAnalysis />} />
+                <Route path="chatbot" element={<MentorChatbot />} />
                 <Route path="*" element={<Navigate to="/mentor" replace />} />
               </Routes>
             </Layout>
@@ -46,6 +51,7 @@ function App() {
           element={
             <Layout requiredRole="student">
               <Routes>
+                <Route path="student-chatbot" element={<StudentChatbot />} />
                 <Route path="/" element={<StudentDashboard />} />
                 <Route path="/profile" element={<StudentProfile />} />
                 <Route path="/attendance" element={<AttendanceRecord />} />

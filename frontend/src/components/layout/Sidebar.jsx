@@ -9,7 +9,9 @@ import {
   LogOut, 
   ClipboardList,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  FileUp,
+  MessageCircle
 } from 'lucide-react';
 
 const Sidebar = ({ role }) => {
@@ -26,12 +28,15 @@ const Sidebar = ({ role }) => {
     { name: 'Students', path: '/mentor/students', icon: Users },
     { name: 'Attendance', path: '/mentor/attendance', icon: ClipboardList },
     { name: 'Analytics', path: '/mentor/analytics', icon: BarChart3 },
-    { name: 'Counseling', path: '/mentor/counseling', icon: Calendar }
+    { name: 'Counseling', path: '/mentor/counseling', icon: Calendar },
+    { name: 'Batch Analysis', path: '/mentor/batch-analysis', icon: FileUp },
+    { name: 'Student Queries', path: '/mentor/chatbot', icon: MessageCircle }
   ] : [
     { name: 'Dashboard', path: '/student', icon: LayoutDashboard },
     { name: 'Attendance', path: '/student/attendance', icon: ClipboardList },
     { name: 'My Profile', path: '/student/profile', icon: Users },
-    { name: 'Counseling', path: '/student/counseling', icon: Calendar }
+    { name: 'Counseling', path: '/student/counseling', icon: Calendar },
+    { name: 'Chatbot', path: '/student/student-chatbot', icon: MessageCircle }
   ];
 
   return (

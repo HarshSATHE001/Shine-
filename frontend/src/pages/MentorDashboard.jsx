@@ -126,24 +126,17 @@ const MentorDashboard = () => {
              <FileText className="absolute top-[-20px] right-[-20px] w-40 h-40 text-white/10 rotate-12" />
           </div>
 
-          <div className="pro-card p-8 bg-white border border-slate-200">
-             <h3 className="text-xl font-bold mb-4 text-slate-800">Quick Alerts</h3>
-             <div className="space-y-4">
-                <div className="flex items-start space-x-3 p-3 bg-rose-50 rounded-2xl border border-rose-100">
-                   <AlertTriangle className="w-5 h-5 text-rose-500 mt-0.5" />
-                   <div>
-                      <p className="text-xs font-bold text-rose-700">High Risk Detected</p>
-                      <p className="text-[10px] text-rose-600">3 new students have fallen below the 70% attendance threshold.</p>
-                   </div>
-                </div>
-                <div className="flex items-start space-x-3 p-3 bg-amber-50 rounded-2xl border border-amber-100">
-                   <Info className="w-5 h-5 text-amber-500 mt-0.5" />
-                   <div>
-                      <p className="text-xs font-bold text-amber-700">Fee Update Pending</p>
-                      <p className="text-[10px] text-amber-600">Semester 2 fee records are currently being synchronized.</p>
-                   </div>
-                </div>
+          <div className="pro-card p-8 bg-white border border-slate-200 flex flex-col justify-between">
+             <div>
+                <h3 className="text-xl font-bold mb-2 text-slate-800">Analyze New Cohort</h3>
+                <p className="text-slate-500 text-sm mb-6">Upload student batch files (XLSX/CSV) for instant risk profiling and AI insights.</p>
              </div>
+             <button 
+                onClick={() => window.location.href = '/mentor/batch-analysis'}
+                className="bg-indigo-50 text-indigo-600 px-6 py-2 rounded-xl font-bold text-sm hover:bg-indigo-100 transition-all text-center"
+             >
+                Start Batch Analysis
+             </button>
           </div>
       </div>
 

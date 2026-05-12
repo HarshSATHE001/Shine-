@@ -301,3 +301,23 @@ exports.getDefaulters = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch defaulters' });
     }
 };
+
+exports.getTestStudents = async (req, res) => {
+    try {
+        const data = fs.readFileSync('test_students_50.json', 'utf8');
+        res.json(JSON.parse(data));
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to load test data' });
+    }
+};
+
+exports.batchPredict = async (req, res) => {
+    try {
+        const results = await aiService.predictBatch(req.body);
+        res.json(results);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'AI Batch Prediction failed' });
+    }
+};
