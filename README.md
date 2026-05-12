@@ -1,16 +1,21 @@
-# HDS EduTrack: JARVIS HUD Edition 🛡️
+# Shine AI: JARVIS HUD Edition 🛡️
 
-**HDS EduTrack** is an AI-powered Student Dropout Prediction and Counseling System designed with a high-tech Ironman (JARVIS) HUD aesthetic. It enables mentors to monitor student batches, identify high-risk individuals via AI diagnostics, and manage intervention protocols.
+**Shine AI** is an advanced AI-powered Student Dropout Prediction and Counseling System designed with a high-tech Ironman (JARVIS) HUD aesthetic. It enables mentors to monitor student batches, identify high-risk individuals via deep-learning diagnostics, and manage intervention protocols.
 
-![HUD Preview](https://via.placeholder.com/1200x600?text=HDS+EduTrack+JARVIS+Console)
+![HUD Preview](https://via.placeholder.com/1200x600?text=Shine+AI+JARVIS+Console)
 
 ## 🚀 Quick Start (Docker)
 
-The easiest way to get started is using Docker Compose:
+1. **Build and Start Services**:
+   ```bash
+   docker-compose up --build -d
+   ```
 
-```bash
-docker-compose up --build
-```
+2. **Seed the Database (Optional - for Demo Data)**:
+   ```bash
+   docker exec -it shine-backend npm run seed
+   ```
+   *(Note: replace `shine-backend` with the actual container name if different)*
 
 - **Frontend**: [http://localhost](http://localhost)
 - **Backend API**: [http://localhost:5000](http://localhost:5000)
@@ -26,16 +31,17 @@ docker-compose up --build
 ## ✨ Core Features
 
 - **Ironman HUD Dashboard**: Real-time monitoring of batch stability and risk.
-- **AI Dropout Prediction**: Advanced risk scoring based on attendance, marks, and fees.
-- **Deep Diagnostic Scan**: Full academic and biometric profiles for every "target" (student).
-- **Target Feedback**: Direct integration of student feedback into the mentor console.
+- **AI Dropout Prediction**: Advanced risk scoring using XGBoost models.
+- **Batch Analysis**: Upload large datasets for instant bulk diagnostic scans.
 - **Protocol Management**: Schedule and track counseling interventions.
+- **AI Chatbot**: Intelligent assistant for mentors and students to query academic standing.
+- **Automated Reporting**: Generate comprehensive XLSX reports for student risk distribution.
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Vite + React 19 + Tailwind CSS + Lucide Icons + Recharts
 - **Backend**: Node.js + Express + SQLite
-- **AI**: Python + FastAPI
+- **AI**: Python + FastAPI + XGBoost + SHAP
 - **Deployment**: Docker + Nginx
 
 ---
