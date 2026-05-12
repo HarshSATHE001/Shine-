@@ -15,7 +15,14 @@ except ImportError:
 app = FastAPI(title="Shine AI Inference Service")
 
 # 1. Load Model and Metadata
-MODEL_PATH = r"d:\harsh\h\harsh\Shine\ai\models\xgb_model.joblib"
+MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "models", "xgb_model.joblib")
+if not os.path.exists(MODEL_PATH):
+    # Try alternate relative path if not found (e.g. if running from src/api)
+    MODEL_PATH = os.path.join("..", "..", "models", "xgb_model.joblib")
+    if not os.path.exists(MODEL_PATH):
+         # Default for Docker /app
+         MODEL_PATH = "/app/models/xgb_model.joblib"
+
 if not os.path.exists(MODEL_PATH):
     raise RuntimeError(f"Model not found at {MODEL_PATH}")
 
